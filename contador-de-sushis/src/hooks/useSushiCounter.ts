@@ -1,115 +1,119 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { parseSafeHistory, parseSafeNumber, STORAGE_KEYS } from "@/lib/storage";
+import {
+  CLAVES_STORAGE,
+  parsearHistorialSeguro,
+  parsearNumeroSeguro,
+  tieneStorageDisponible
+} from "@/lib/storage";
 
-const MAX_HISTORY = 5;
+const MAX_HISTORIAL = 5;
 
-const getNow = () => new Date().toISOString();
+export type TipoEventoSushi = {
+  id: number;
+  emoji: "🍣";
+};
 
-const getMessageByCount = (sushiCount: number): string => {
-  if (sushiCount === 0) {
-    return "Todavía no arrancaste. El sushi te está esperando.";
-  }
-  if (sushiCount <= 5) {
-    return "Entrada tranquila, todavía estás calentando.";
-  }
-  if (sushiCount <= 12) {
-    return "Buen ritmo, ya estás en modo sushi.";
-  }
-  if (sushiCount <= 24) {
-    return "Cuidado, estás entrando en territorio profesional.";
-  }
+const mensajePorCantidad = (contadorSushis: number): string => {
+  if (contadorSushis === 0) return "Todavía no arrancaste. El sushi te está esperando.";
+  if (contadorSushis <= 5) return "Entrada tranquila, todavía estás calentando.";
+  if (contadorSushis <= 12) return "Buen ritmo, ya estás en modo sushi.";
+  if (contadorSushis <= 24) return "Cuidado, estás entrando en territorio profesional.";
   return "Leyenda del sushi desbloqueada.";
 };
 
+const horaBonita = (fechaISO: string) =>
+  new Date(fechaISO).toLocaleString("es-AR", {
+    dateStyle: "short",
+    timeStyle: "short"
+  });
+
 export const useSushiCounter = () => {
-  const [sushiCount, setSushiCount] = useState(0);
-  const [bestRecord, setBestRecord] = useState(0);
-  const [lastSushiTime, setLastSushiTime] = useState<string | null>(null);
-  const [history, setHistory] = useState<string[]>([]);
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [showPopAnimation, setShowPopAnimation] = useState(false);
-  const [floatingSushiId, setFloatingSushiId] = useState(0);
+  const [contadorSushis, setContadorSushis] = useState(0);
+  const [mejorRecord, setMejorRecord] = useState(0);
+  const [ultimoSushiISO, setUltimoSushiISO] = useState<string | null>(null);
+  const [historialSushis, setHistorialSushis] = useState<string[]>([]);
+
+  const [hidratoOk, setHidratoOk] = useState(false);
+  const [animarNumero, setAnimarNumero] = useState(false);
+  const [eventoFlotante, setEventoFlotante] = useState<TipoEventoSushi | null>(null);
 
   useEffect(() => {
-    const countFromStorage = parseSafeNumber(localStorage.getItem(STORAGE_KEYS.sushiCount));
-    const recordFromStorage = parseSafeNumber(localStorage.getItem(STORAGE_KEYS.bestRecord));
-    const lastTimeFromStorage = localStorage.getItem(STORAGE_KEYS.lastSushiTime);
-    const historyFromStorage = parseSafeHistory(localStorage.getItem(STORAGE_KEYS.sushiHistory));
+    if (!tieneStorageDisponible()) {
+      setHidratoOk(true);
+      return;
+    }
 
-    setSushiCount(countFromStorage);
-    setBestRecord(Math.max(recordFromStorage, countFromStorage));
-    setLastSushiTime(lastTimeFromStorage || null);
-    setHistory(historyFromStorage);
-    setIsHydrated(true);
+    const contadorGuardado = parsearNumeroSeguro(localStorage.getItem(CLAVES_STORAGE.contadorSushis));
+    const recordGuardado = parsearNumeroSeguro(localStorage.getItem(CLAVES_STORAGE.mejorRecord));
+    const ultimoSushiGuardado = localStorage.getItem(CLAVES_STORAGE.ultimoSushiISO);
+    const historialGuardado = parsearHistorialSeguro(localStorage.getItem(CLAVES_STORAGE.historialSushis));
+
+    setContadorSushis(contadorGuardado);
+    setMejorRecord(Math.max(recordGuardado, contadorGuardado));
+    setUltimoSushiISO(ultimoSushiGuardado || null);
+    setHistorialSushis(historialGuardado);
+    setHidratoOk(true);
   }, []);
 
   useEffect(() => {
-    if (!isHydrated) {
-      return;
+    if (!hidratoOk || !tieneStorageDisponible()) return;
+
+    localStorage.setItem(CLAVES_STORAGE.contadorSushis, String(contadorSushis));
+    localStorage.setItem(CLAVES_STORAGE.mejorRecord, String(mejorRecord));
+    localStorage.setItem(CLAVES_STORAGE.ultimoSushiISO, ultimoSushiISO ?? "");
+    localStorage.setItem(CLAVES_STORAGE.historialSushis, JSON.stringify(historialSushis));
+  }, [contadorSushis, mejorRecord, ultimoSushiISO, historialSushis, hidratoOk]);
+
+  const sumarSushis = (cantidad = 1) => {
+    if (cantidad <= 0) return;
+
+    const nuevoTotal = contadorSushis + cantidad;
+    const ahoraISO = new Date().toISOString();
+
+    const nuevoHistorial = [`${horaBonita(ahoraISO)} (+${cantidad})`, ...historialSushis].slice(0, MAX_HISTORIAL);
+
+    setContadorSushis(nuevoTotal);
+    setUltimoSushiISO(ahoraISO);
+    setHistorialSushis(nuevoHistorial);
+
+    if (nuevoTotal > mejorRecord) {
+      setMejorRecord(nuevoTotal);
     }
 
-    localStorage.setItem(STORAGE_KEYS.sushiCount, String(sushiCount));
-    localStorage.setItem(STORAGE_KEYS.bestRecord, String(bestRecord));
-    localStorage.setItem(STORAGE_KEYS.lastSushiTime, lastSushiTime ?? "");
-    localStorage.setItem(STORAGE_KEYS.sushiHistory, JSON.stringify(history));
-  }, [bestRecord, history, isHydrated, lastSushiTime, sushiCount]);
-
-  const handleAddSushi = (amount = 1) => {
-    if (amount <= 0) {
-      return;
-    }
-
-    const newCount = sushiCount + amount;
-    const now = getNow();
-    const newHistory = [
-      `${new Date(now).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })} (+${amount})`,
-      ...history
-    ].slice(0, MAX_HISTORY);
-
-    setSushiCount(newCount);
-    setLastSushiTime(now);
-    setHistory(newHistory);
-
-    if (newCount > bestRecord) {
-      setBestRecord(newCount);
-    }
-
-    setShowPopAnimation(true);
-    setFloatingSushiId((current) => current + 1);
-    window.setTimeout(() => setShowPopAnimation(false), 260);
+    setAnimarNumero(true);
+    setEventoFlotante({ id: Date.now(), emoji: "🍣" });
+    window.setTimeout(() => setAnimarNumero(false), 280);
+    window.setTimeout(() => setEventoFlotante(null), 950);
   };
 
-  const handleRemoveSushi = () => {
-    setSushiCount((current) => Math.max(0, current - 1));
+  const restarSushi = () => setContadorSushis((actual) => Math.max(0, actual - 1));
+
+  const reiniciarContador = () => {
+    setContadorSushis(0);
+    setUltimoSushiISO(null);
+    setHistorialSushis([]);
   };
 
-  const handleReset = () => {
-    setSushiCount(0);
-    setLastSushiTime(null);
-    setHistory([]);
-  };
+  const borrarHistorial = () => setHistorialSushis([]);
 
-  const clearHistory = () => {
-    setHistory([]);
-  };
-
-  const phrase = useMemo(() => getMessageByCount(sushiCount), [sushiCount]);
-  const hasNewRecord = sushiCount > 0 && sushiCount === bestRecord;
+  const frase = useMemo(() => mensajePorCantidad(contadorSushis), [contadorSushis]);
+  const rompisteRecord = contadorSushis > 0 && contadorSushis === mejorRecord;
 
   return {
-    sushiCount,
-    bestRecord,
-    lastSushiTime,
-    history,
-    phrase,
-    hasNewRecord,
-    showPopAnimation,
-    floatingSushiId,
-    handleAddSushi,
-    handleRemoveSushi,
-    handleReset,
-    clearHistory
+    contadorSushis,
+    mejorRecord,
+    ultimoSushiISO,
+    historialSushis,
+    frase,
+    rompisteRecord,
+    hidratoOk,
+    animarNumero,
+    eventoFlotante,
+    sumarSushis,
+    restarSushi,
+    reiniciarContador,
+    borrarHistorial
   };
 };

@@ -1,71 +1,142 @@
 # Contador de Sushis 🍣
 
-App web hecha con **Next.js + TypeScript + Tailwind CSS** para contar cuántos sushis comiste.
+Mini app web pensada como **MVP real**: simple, rápida de usar en celular y lista para mostrar.
 
-## Requisitos
+Stack:
+- Next.js + TypeScript
+- Tailwind CSS
+- LocalStorage (sin backend)
 
-- Node.js 18 o superior
+---
+
+## 1) ¿Qué hace la app?
+
+Permite contar cuántas piezas de sushi comiste con una experiencia cómoda:
+
+- Botón grande **“Comí un sushi 🍣”** (+1)
+- Zona táctil grande para sumar rápido
+- Botones extra **+5** y **Modo atracón +10**
+- Botón **Restar 1** (nunca baja de 0)
+- Reinicio con confirmación en modal
+- Guardado automático en LocalStorage
+- Estadísticas: total, frase dinámica, último sushi, récord histórico
+- Historial de los últimos 5 eventos
+
+---
+
+## 2) Requisitos
+
+- Node.js 18+
 - npm
 
-## Instalación
+---
+
+## 3) Instalación y ejecución (paso a paso)
+
+### Instalar dependencias
 
 ```bash
 npm install
 ```
 
-Instala todas las dependencias del proyecto.
+Instala todas las librerías del proyecto.
 
-## Desarrollo
+### Correr en desarrollo
 
 ```bash
 npm run dev
 ```
 
-Levanta la app en modo desarrollo (normalmente en `http://localhost:3000`).
+Levanta la app localmente (normalmente en `http://localhost:3000`).
 
-## Build de producción
+### Crear build de producción
 
 ```bash
 npm run build
 ```
 
-Genera la versión optimizada para producción.
+Genera una versión optimizada para deploy.
 
-## Ejecutar build local
+### Ejecutar la build
 
 ```bash
 npm run start
 ```
 
-Sirve la app usando el build generado.
+Sirve la build localmente para probar el modo producción.
 
-## ¿Cómo probar LocalStorage?
+---
 
-1. Abrí la app y sumá algunos sushis.
-2. Cerrá la pestaña.
-3. Volvé a abrir la app.
-4. El contador, récord, último sushi e historial deberían seguir igual.
-5. Si abrís DevTools > Application > Local Storage, vas a ver estas claves:
-   - `sushiCount`
-   - `bestRecord`
-   - `lastSushiTime`
-   - `sushiHistory`
+## 4) Cómo comprobar que LocalStorage funciona
 
-## ¿Cómo cambiar textos, colores y botones?
+1. Abrí la app.
+2. Sumá varios sushis.
+3. Cerrá pestaña o recargá la página.
+4. Volvé a entrar.
+5. El contador y el récord deben seguir igual.
 
-- **Textos principales**: `src/components/CounterDisplay.tsx`, `src/components/SushiControls.tsx`, `src/components/SushiStats.tsx`.
-- **Frases por cantidad**: `getMessageByCount` en `src/hooks/useSushiCounter.ts`.
-- **Colores y animaciones**: `tailwind.config.ts`.
-- **Layout principal y orden de secciones**: `src/app/page.tsx`.
+También podés ver los datos en DevTools:
 
-## Funciones incluidas
+- `contadorSushis`
+- `mejorRecord`
+- `ultimoSushiISO`
+- `historialSushis`
 
-- Sumar +1 con botón principal.
-- Sumar +1 tocando una zona grande.
-- Restar 1 sin permitir negativos.
-- Reiniciar con confirmación.
-- Persistencia en LocalStorage.
-- Estadísticas simples.
-- Récord histórico automático.
-- Historial de últimos 5 eventos.
-- Botones extra: `+5` y `Modo atracón +10`.
+---
+
+## 5) Estructura del código
+
+```txt
+src/
+  app/
+    globals.css
+    layout.tsx
+    page.tsx
+  components/
+    CounterDisplay.tsx
+    TouchArea.tsx
+    SushiControls.tsx
+    SushiStats.tsx
+    ResetModal.tsx
+  hooks/
+    useSushiCounter.ts
+  lib/
+    storage.ts
+```
+
+---
+
+## 6) Personalización rápida
+
+### Cambiar textos
+
+Editá:
+- `src/components/CounterDisplay.tsx`
+- `src/components/SushiControls.tsx`
+- `src/components/SushiStats.tsx`
+- `src/components/TouchArea.tsx`
+
+### Cambiar frases por cantidad
+
+Editá `mensajePorCantidad` en:
+- `src/hooks/useSushiCounter.ts`
+
+### Cambiar colores y animaciones
+
+Editá:
+- `tailwind.config.ts`
+- `src/app/globals.css`
+
+### Cambiar orden de secciones
+
+Editá:
+- `src/app/page.tsx`
+
+---
+
+## 7) Decisiones de MVP
+
+- Se priorizó UX mobile-first y acciones en 1 toque.
+- Sin backend para mantenerlo liviano y fácil de desplegar.
+- Lógica separada en `hook` para facilitar mantenimiento.
+- Componentes simples y reutilizables para iterar rápido.

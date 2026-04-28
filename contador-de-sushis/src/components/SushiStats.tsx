@@ -1,45 +1,48 @@
-type SushiStatsProps = {
-  sushiCount: number;
-  bestRecord: number;
-  phrase: string;
-  hasNewRecord: boolean;
-  lastSushiTime: string | null;
-  history: string[];
-  onClearHistory: () => void;
+type Props = {
+  contadorSushis: number;
+  mejorRecord: number;
+  frase: string;
+  rompisteRecord: boolean;
+  ultimoSushiISO: string | null;
+  historialSushis: string[];
+  onBorrarHistorial: () => void;
 };
 
 export const SushiStats = ({
-  sushiCount,
-  bestRecord,
-  phrase,
-  hasNewRecord,
-  lastSushiTime,
-  history,
-  onClearHistory
-}: SushiStatsProps) => {
-  const formattedLastSushi = lastSushiTime
-    ? new Date(lastSushiTime).toLocaleString("es-AR", { dateStyle: "medium", timeStyle: "short" })
+  contadorSushis,
+  mejorRecord,
+  frase,
+  rompisteRecord,
+  ultimoSushiISO,
+  historialSushis,
+  onBorrarHistorial
+}: Props) => {
+  const ultimaFecha = ultimoSushiISO
+    ? new Date(ultimoSushiISO).toLocaleString("es-AR", { dateStyle: "medium", timeStyle: "short" })
     : "Todavía sin registros";
 
   return (
-    <section className="rounded-3xl bg-white/95 p-6 shadow-soft">
+    <section className="rounded-[28px] bg-white/95 p-6 shadow-soft">
       <h2 className="text-xl font-bold text-soy">Estadísticas</h2>
-      <ul className="mt-4 space-y-2 text-sm text-soy/85 sm:text-base">
-        <li>
-          <span className="font-semibold">Total actual:</span> {sushiCount} sushis.
-        </li>
-        <li>
-          <span className="font-semibold">Frase del día:</span> {phrase}
-        </li>
-        <li>
-          <span className="font-semibold">Último sushi:</span> {formattedLastSushi}
-        </li>
-        <li>
-          <span className="font-semibold">Tu récord:</span> {bestRecord} sushis.
-        </li>
-      </ul>
 
-      {hasNewRecord && (
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <article className="rounded-2xl border border-soy/10 bg-rice p-3">
+          <p className="text-xs uppercase tracking-wider text-soy/60">Total</p>
+          <p className="mt-1 text-xl font-bold text-soy">{contadorSushis} sushis</p>
+        </article>
+        <article className="rounded-2xl border border-soy/10 bg-rice p-3">
+          <p className="text-xs uppercase tracking-wider text-soy/60">Récord histórico</p>
+          <p className="mt-1 text-xl font-bold text-soy">{mejorRecord} sushis</p>
+        </article>
+      </div>
+
+      <p className="mt-4 rounded-xl bg-salmon/10 px-4 py-3 text-sm font-medium text-soy">{frase}</p>
+
+      <p className="mt-4 text-sm text-soy/80">
+        <span className="font-semibold">Último sushi:</span> {ultimaFecha}
+      </p>
+
+      {rompisteRecord && (
         <p className="mt-4 rounded-xl bg-amber-100 px-4 py-2 font-semibold text-amber-900">
           🎉 ¡Nuevo récord! Superaste tu mejor marca.
         </p>
@@ -50,18 +53,18 @@ export const SushiStats = ({
           <h3 className="font-semibold text-soy">Últimos 5 momentos</h3>
           <button
             type="button"
-            onClick={onClearHistory}
+            onClick={onBorrarHistorial}
             className="rounded-lg border border-soy/20 px-3 py-1 text-xs font-semibold text-soy transition hover:bg-soy/5"
           >
             Borrar historial
           </button>
         </div>
 
-        {history.length === 0 ? (
+        {historialSushis.length === 0 ? (
           <p className="text-sm text-soy/65">Aún no hay eventos guardados.</p>
         ) : (
           <ol className="list-inside list-decimal space-y-1 text-sm text-soy/80">
-            {history.map((item) => (
+            {historialSushis.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ol>
